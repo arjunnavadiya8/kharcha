@@ -1,0 +1,12 @@
+﻿services:
+  - type: web
+    name: kharcha
+    runtime: static
+    branch: main
+    plan: free
+    buildCommand: ''
+    staticPublishPath: ./
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
