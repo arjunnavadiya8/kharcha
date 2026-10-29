@@ -292,86 +292,6 @@ function renderHome() {
       el.addEventListener('click', () => openEditModal(el.dataset.id));
     });
   }
-
-  // ─── INVESTMENTS SECTION IN HOME ───
-  const investTxns = txns.filter(t => t.type === 'investment');
-  const investTotalEl = document.getElementById('home-invest-total');
-  const investRatioEl = document.getElementById('home-invest-ratio');
-  const investBarsEl = document.getElementById('home-invest-stacked-bar');
-  const investChipsEl = document.getElementById('home-invest-chips');
-  const investRecentEl = document.getElementById('home-invest-recent');
-
-  if (investTotalEl) investTotalEl.textContent = formatCurrency(invest);
-  if (investRatioEl) {
-    const ratio = income > 0 ? Math.round((invest / income) * 100) : 0;
-    investRatioEl.textContent = `${ratio}% of income`;
-  }
-
-  // Group investments by category
-  const investByCat = {};
-  investTxns.forEach(t => {
-    investByCat[t.category] = (investByCat[t.category] || 0) + t.amount;
-  });
-
-  if (investBarsEl) {
-    if (invest > 0) {
-      investBarsEl.innerHTML = Object.entries(investByCat).map(([catId, amt]) => {
-        const cat = getCategoryById(catId);
-        const w = (amt / invest) * 100;
-        return `<div class="invest-bar-segment" style="width:${w}%; background:${cat.color};" title="${cat.name}: ${formatCurrency(amt)}"></div>`;
-      }).join('');
-      investBarsEl.style.display = 'flex';
-    } else {
-      investBarsEl.style.display = 'none';
-    }
-  }
-
-  if (investChipsEl) {
-    if (invest > 0) {
-      investChipsEl.innerHTML = Object.entries(investByCat).map(([catId, amt]) => {
-        const cat = getCategoryById(catId);
-        return `
-          <div class="invest-chip">
-            <span>${cat.emoji} ${cat.name}</span>
-            <span class="invest-chip-amt">${formatCurrency(amt)}</span>
-          </div>
-        `;
-      }).join('');
-    } else {
-      investChipsEl.innerHTML = `
-        <div style="font-size:12px; color:var(--text-secondary); padding:4px 0;">
-          Track SIP, Stocks, Crypto, Gold & FD here. Tap + INVEST to begin!
-        </div>
-      `;
-    }
-  }
-
-  if (investRecentEl) {
-    if (investTxns.length > 0) {
-      const recentInvest = [...investTxns].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 3);
-      investRecentEl.innerHTML = recentInvest.map(t => {
-        const cat = getCategoryById(t.category);
-        return `
-          <div class="invest-mini-item" data-id="${t.id}">
-            <div class="invest-mini-left">
-              <span style="font-size:16px;">${cat.emoji}</span>
-              <div>
-                <div class="invest-mini-name">${t.note || cat.name}</div>
-                <div class="invest-mini-cat">${cat.name} · ${t.method || 'UPI'}</div>
-              </div>
-            </div>
-            <div class="invest-mini-amt">↗ ${formatCurrency(t.amount)}</div>
-          </div>
-        `;
-      }).join('');
-      investRecentEl.querySelectorAll('.invest-mini-item').forEach(el => {
-        el.addEventListener('click', () => openEditModal(el.dataset.id));
-      });
-      investRecentEl.style.display = 'flex';
-    } else {
-      investRecentEl.style.display = 'none';
-    }
-  }
 }
 
 function renderTransactionItem(t) {
@@ -1460,23 +1380,16 @@ function initEventListeners() {
   // FAB
   document.getElementById('fab-add').addEventListener('click', () => openAddModal());
 
-  // Home Add Invest button
-  const homeAddInvestBtn = document.getElementById('home-add-invest-btn');
-  if (homeAddInvestBtn) {
-    homeAddInvestBtn.addEventListener('click', () => openAddModal('investment'));
-  }
-
-  // Summary Invest pill scroll to card
+  // Summary Invest pill switches to analytics investment breakdown
   const investSummaryPill = document.querySelector('.summary-pill.invest');
   if (investSummaryPill) {
     investSummaryPill.style.cursor = 'pointer';
     investSummaryPill.addEventListener('click', () => {
-      const investCard = document.getElementById('home-invest-card');
-      if (investCard) {
-        investCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        investCard.style.boxShadow = '0 0 0 2px var(--invest)';
-        setTimeout(() => { investCard.style.boxShadow = ''; }, 1200);
-      }
+      switchView('stats-view');
+      setTimeout(() => {
+        const invCard = document.getElementById('invest-stats-card');
+        if (invCard) invCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 50);
     });
   }
 
