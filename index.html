@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Expense Tracker — papi</title>
+  <meta name="description" content="Personal expense tracker with analytics, budgeting, and transaction history">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap"
+    rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+  <div id="app">
+
+    <!-- ════════════ HOME VIEW ════════════ -->
+    <div id="home-view" class="view active">
+      <header class="view-header home-header">
+        <div class="greeting-block">
+          <span class="greeting-label" id="greeting-label">GOOD AFTERNOON</span>
+          <h1 class="greeting-name" id="greeting-name">papi</h1>
+        </div>
+        <div class="month-nav" id="home-month-nav">
+          <button class="month-btn prev" id="home-prev-month">‹</button>
+          <span class="month-label" id="home-month-label">Oct 2026</span>
+          <button class="month-btn next" id="home-next-month">›</button>
+        </div>
+      </header>
+
+      <div class="scroll-content">
+        <!-- Net Balance Card -->
+        <div class="card balance-card">
+          <div class="balance-header">
+            <span class="badge badge-green">NET BALANCE</span>
+            <span class="card-month" id="balance-month">October 2026</span>
+          </div>
+          <div class="balance-amount" id="net-balance">₹ 0</div>
+          <div class="balance-summary">
+            <div class="summary-pill income">
+              <span class="pill-label">↑ INCOME</span>
+              <span class="pill-amount" id="home-income">₹0</span>
+            </div>
+            <div class="summary-pill expense">
+              <span class="pill-label">↓ EXPENSE</span>
+              <span class="pill-amount" id="home-expense">₹0</span>
+            </div>
+            <div class="summary-pill invest">
+              <span class="pill-label">↗ INVEST</span>
+              <span class="pill-amount" id="home-invest">₹0</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Monthly Budget Card -->
+        <div class="card budget-card">
+          <div class="budget-header">
+            <span class="budget-title">MONTHLY BUDGET</span>
+            <span class="budget-amounts" id="budget-amounts">₹0 / ₹5,000</span>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill" id="budget-progress"></div>
+          </div>
+          <span class="budget-remaining" id="budget-remaining">₹5,000 remaining</span>
+        </div>
+
+        <!-- Recent Transactions -->
+        <div class="section-header">
+          <h2>RECENT</h2>
+          <button class="see-all-btn" id="see-all-btn">SEE ALL ›</button>
+        </div>
+        <div id="recent-transactions" class="transactions-list">
+          <div class="empty-state" id="home-empty">No transactions yet. Tap + to add one!</div>
+        </div>
+
+        <!-- Investments Section -->
+        <div class="section-header" style="margin-top:22px;">
+          <h2>INVESTMENTS</h2>
+          <button class="see-all-btn" id="home-add-invest-btn">+ INVEST</button>
+        </div>
+        <div class="card invest-card" id="home-invest-card">
+          <div class="invest-card-top">
+            <div>
+              <span class="invest-label">TOTAL INVESTED</span>
+              <div class="invest-total-amt" id="home-invest-total">₹0</div>
+            </div>
+            <div class="invest-pill-badge" id="home-invest-ratio">0% of income</div>
+          </div>
+          <div class="invest-stacked-bar" id="home-invest-stacked-bar"></div>
+          <div class="invest-chips-grid" id="home-invest-chips"></div>
+          <div class="invest-recent-container" id="home-invest-recent"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════════ STATS VIEW ════════════ -->
+    <div id="stats-view" class="view">
+      <header class="view-header">
+        <h1 class="view-title">Analytics</h1>
+        <div class="month-nav" id="stats-month-nav">
+          <button class="month-btn prev" id="stats-prev-month">‹</button>
+          <span class="month-label" id="stats-month-label">Oct 2026</span>
+          <button class="month-btn next" id="stats-next-month">›</button>
+        </div>
+      </header>
+
+      <div class="scroll-content">
+        <!-- Donut Chart -->
+        <div class="card chart-card">
+          <div class="donut-wrapper">
+            <canvas id="donut-chart"></canvas>
+            <div class="donut-center">
+              <span class="donut-label">TOTAL OUT</span>
+              <span class="donut-amount" id="donut-amount">₹0</span>
+              <span class="donut-budget" id="donut-budget">0% of budget</span>
+            </div>
+          </div>
+          <div id="donut-legend" class="donut-legend"></div>
+        </div>
+
+        <!-- Time Period Tabs -->
+        <div class="card time-tabs">
+          <button class="time-tab" data-period="day">DAY</button>
+          <button class="time-tab" data-period="week">WEEK</button>
+          <button class="time-tab active" data-period="month">MONTH</button>
+          <button class="time-tab" data-period="year">YEAR</button>
+        </div>
+
+        <!-- Spending Trend -->
+        <div class="card trend-card">
+          <h3 class="card-title">SPENDING TREND</h3>
+          <canvas id="trend-chart"></canvas>
+        </div>
+
+        <!-- Breakdown -->
+        <div class="card breakdown-card">
+          <div class="breakdown-header">
+            <h3 class="card-title">EXPENSE BREAKDOWN</h3>
+            <span class="card-month" id="breakdown-month">October 2026</span>
+          </div>
+          <div id="breakdown-list" class="breakdown-list"></div>
+        </div>
+
+        <!-- Investment Portfolio Breakdown -->
+        <div class="card breakdown-card" id="invest-stats-card">
+          <div class="breakdown-header">
+            <h3 class="card-title">INVESTMENT ALLOCATION</h3>
+            <span class="card-month" id="invest-breakdown-month">October 2026</span>
+          </div>
+          <div id="invest-breakdown-list" class="breakdown-list"></div>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="balance-summary stats-summary">
+          <div class="summary-pill income">
+            <span class="pill-label">↑ INCOME</span>
+            <span class="pill-amount" id="stats-income">₹0</span>
+          </div>
+          <div class="summary-pill expense">
+            <span class="pill-label">↓ EXPENSES</span>
+            <span class="pill-amount" id="stats-expense">₹0</span>
+          </div>
+          <div class="summary-pill invest">
+            <span class="pill-label">↗ INVESTED</span>
+            <span class="pill-amount" id="stats-invest">₹0</span>
+          </div>
+        </div>
+
+        <!-- Net Savings -->
+        <div class="card savings-card">
+          <div class="savings-row">
+            <div>
+              <span class="savings-label">NET SAVINGS</span>
+              <span class="savings-amount" id="net-savings">₹0</span>
+            </div>
+            <div class="savings-rate">
+              <span class="rate-value" id="savings-rate">0%</span>
+              <span class="rate-label">SAVINGS RATE</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════════ HISTORY VIEW ════════════ -->
+    <div id="history-view" class="view">
+      <header class="view-header">
+        <h1 class="view-title">History</h1>
+        <div class="month-nav" id="history-month-nav">
+          <button class="month-btn prev" id="history-prev-month">‹</button>
+          <span class="month-label" id="history-month-label">Oct 2026</span>
+          <button class="month-btn next" id="history-next-month">›</button>
+        </div>
+      </header>
+
+      <div class="scroll-content">
+        <!-- Filter Pills -->
+        <div class="filter-pills" id="history-filters">
+          <button class="filter-pill active" data-filter="all">ALL</button>
+          <button class="filter-pill" data-filter="income">INCOME</button>
+          <button class="filter-pill" data-filter="expense">EXPENSE</button>
+          <button class="filter-pill" data-filter="investment">INVESTMENT</button>
+        </div>
+
+        <!-- Transaction Groups -->
+        <div id="history-transactions" class="transactions-list">
+          <div class="empty-state">No transactions for this period.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════════ SETTINGS VIEW ════════════ -->
+    <div id="settings-view" class="view">
+      <header class="view-header">
+        <h1 class="view-title">Settings</h1>
+      </header>
+
+      <div class="scroll-content">
+        <!-- Profile Section -->
+        <div class="settings-section-label">PROFILE</div>
+        <div class="card settings-card">
+          <div class="settings-row">
+            <div class="settings-icon" style="background:#7C4DFF">🌙</div>
+            <div class="settings-info">
+              <span class="settings-name">Theme</span>
+              <span class="settings-desc">Light or Dark</span>
+            </div>
+            <select id="setting-theme" class="settings-input settings-select">
+              <option value="dark">Dark</option>
+              <option value="light">Light</option>
+            </select>
+          </div>
+          <div class="settings-divider"></div>
+          <div class="settings-row">
+            <div class="settings-icon" style="background:#FF7043">👤</div>
+            <div class="settings-info">
+              <span class="settings-name">Your Name</span>
+              <span class="settings-desc">Used in greeting</span>
+            </div>
+            <input type="text" id="setting-name" class="settings-input" value="papi" placeholder="Name">
+          </div>
+          <div class="settings-divider"></div>
+          <div class="settings-row">
+            <div class="settings-icon" style="background:#FFCA28">💰</div>
+            <div class="settings-info">
+              <span class="settings-name">Monthly Budget</span>
+              <span class="settings-desc">Spending limit</span>
+            </div>
+            <input type="number" id="setting-budget" class="settings-input" value="5000" min="0">
+          </div>
+          <div class="settings-divider"></div>
+          <div class="settings-row">
+            <div class="settings-icon" style="background:#26A69A">📅</div>
+            <div class="settings-info">
+              <span class="settings-name">Cycle Start Day</span>
+              <span class="settings-desc">Financial month begins on</span>
+            </div>
+            <input type="number" id="setting-cycle" class="settings-input" value="1" min="1" max="28">
+          </div>
+        </div>
+
+        <button class="btn-primary" id="save-settings-btn">SAVE CHANGES</button>
+
+        <!-- Categories Section -->
+        <div class="settings-section-label">CATEGORIES</div>
+        <div class="card settings-card">
+          <div class="settings-row clickable" id="manage-categories-btn">
+            <div class="settings-icon" style="background:#AB47BC">📋</div>
+            <div class="settings-info">
+              <span class="settings-name">Manage Categories</span>
+              <span class="settings-desc" id="category-count">13 Categories</span>
+            </div>
+            <span class="chevron" id="categories-chevron">▾</span>
+          </div>
+          <div id="categories-panel" class="collapsible-panel hidden">
+            <div id="categories-list" class="categories-list"></div>
+            <div class="add-category-row">
+              <input type="text" id="new-cat-emoji" class="cat-input emoji-input" placeholder="🏷️" maxlength="2">
+              <input type="text" id="new-cat-name" class="cat-input name-input" placeholder="Category name">
+              <input type="color" id="new-cat-color" class="cat-input color-input" value="#888888">
+              <select id="new-cat-type" class="cat-input type-input">
+                <option value="expense">Expense</option>
+                <option value="income">Income</option>
+                <option value="investment">Investment</option>
+              </select>
+              <button class="cat-add-btn" id="add-category-btn">+</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Keywords per Category -->
+        <div class="settings-section-label">KEYWORDS PER CATEGORY</div>
+        <div class="card settings-card">
+          <div class="settings-row clickable" id="manage-keywords-btn">
+            <div class="settings-icon" style="background:#00E676">⚡</div>
+            <div class="settings-info">
+              <span class="settings-name">Customize Keywords</span>
+              <span class="settings-desc">Add/remove words for smarter detection</span>
+            </div>
+            <span class="chevron" id="keywords-chevron">▾</span>
+          </div>
+          <div id="keywords-panel" class="collapsible-panel hidden">
+            <div id="keywords-list" class="keywords-list"></div>
+            <div class="add-keyword-row">
+              <select id="kw-category-select" class="cat-input type-input"></select>
+              <input type="text" id="new-keyword-input" class="cat-input name-input" placeholder="Keyword (e.g. blinkit, uber)">
+              <button class="cat-add-btn" id="add-keyword-btn">+</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Import/Export Section -->
+        <div class="settings-section-label">IMPORT / EXPORT</div>
+        <div class="card settings-card">
+          <div class="settings-row clickable" id="import-csv-btn">
+            <div class="settings-icon" style="background:#42A5F5">📥</div>
+            <div class="settings-info">
+              <span class="settings-name">Import Excel/CSV</span>
+              <span class="settings-desc">Restore transactions from file</span>
+            </div>
+          </div>
+          <div class="settings-divider"></div>
+          <div class="settings-row clickable" id="export-month-btn">
+            <div class="settings-icon" style="background:#FFCA28">📥</div>
+            <div class="settings-info">
+              <span class="settings-name" id="export-month-name">Export This Month</span>
+              <span class="settings-desc" id="export-month-desc">Current month · CSV</span>
+            </div>
+          </div>
+          <div class="settings-divider"></div>
+          <div class="settings-row clickable" id="export-year-btn">
+            <div class="settings-icon" style="background:#FF9800">📥</div>
+            <div class="settings-info">
+              <span class="settings-name">Export Full Year</span>
+              <span class="settings-desc" id="export-year-desc">All months · CSV</span>
+            </div>
+          </div>
+          <div class="settings-divider"></div>
+          <div class="settings-row clickable" id="backup-json-btn">
+            <div class="settings-icon" style="background:#26A69A">💾</div>
+            <div class="settings-info">
+              <span class="settings-name">Full Backup (JSON)</span>
+              <span class="settings-desc">Save all txns, categories & settings</span>
+            </div>
+          </div>
+          <div class="settings-divider"></div>
+          <div class="settings-row clickable" id="restore-json-btn">
+            <div class="settings-icon" style="background:#AB47BC">📤</div>
+            <div class="settings-info">
+              <span class="settings-name">Restore Full Backup</span>
+              <span class="settings-desc">Import complete JSON backup</span>
+            </div>
+          </div>
+          <input type="file" id="import-file" accept=".csv" style="display:none">
+          <input type="file" id="restore-file" accept=".json" style="display:none">
+        </div>
+
+        <!-- Account -->
+        <div class="settings-section-label">ACCOUNT</div>
+        <button class="settings-card settings-row clickable" id="sign-out-btn" style="width:100%; justify-content:center; padding:14px; background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); font-weight:700; letter-spacing:1px; color:var(--text); cursor:pointer;">
+          SIGN OUT
+        </button>
+
+        <!-- Danger Zone -->
+        <div class="settings-section-label">DANGER ZONE</div>
+        <div class="card settings-card">
+          <div class="settings-row clickable" id="clear-data-btn">
+            <div class="settings-icon" style="background:#EF5350">🗑️</div>
+            <div class="settings-info">
+              <span class="settings-name" style="color:var(--expense)">Clear All Data</span>
+              <span class="settings-desc">Delete all transactions & reset</span>
+            </div>
+          </div>
+        </div>
+        <div style="height:40px"></div>
+      </div>
+    </div>
+
+    <!-- ════════════ BOTTOM NAV ════════════ -->
+    <nav id="bottom-nav">
+      <button class="nav-item active" data-view="home-view" id="nav-home">
+        <svg viewBox="0 0 24 24" fill="currentColor">
+          <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
+        </svg>
+        <span>HOME</span>
+      </button>
+      <button class="nav-item" data-view="stats-view" id="nav-stats">
+        <svg viewBox="0 0 24 24" fill="currentColor">
+          <path d="M5 9.2h3V19H5zM10.6 5h2.8v14h-2.8zm5.6 8H19v6h-2.8z" />
+        </svg>
+        <span>STATS</span>
+      </button>
+      <button class="fab" id="fab-add">
+        <svg viewBox="0 0 24 24" fill="currentColor">
+          <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6z" />
+        </svg>
+      </button>
+      <button class="nav-item" data-view="history-view" id="nav-history">
+        <svg viewBox="0 0 24 24" fill="currentColor">
+          <path
+            d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11zm-5-7H9v2h4v-2zm2-2H9v2h6v-2z" />
+        </svg>
+        <span>HISTORY</span>
+      </button>
+      <button class="nav-item" data-view="settings-view" id="nav-settings">
+        <svg viewBox="0 0 24 24" fill="currentColor">
+          <path
+            d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.49.49 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96a.49.49 0 0 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.07.62-.07.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6A3.6 3.6 0 1 1 12 8.4a3.6 3.6 0 0 1 0 7.2z" />
+        </svg>
+        <span>SETTINGS</span>
+      </button>
+    </nav>
+
+    <!-- ════════════ ADD TRANSACTION MODAL ════════════ -->
+    <div id="add-modal" class="modal-overlay hidden">
+      <div class="modal">
+        <div class="modal-handle"></div>
+        <div class="modal-header-row">
+          <h2 class="modal-title">Add Transaction</h2>
+          <button type="button" class="modal-close-icon" id="modal-close-icon">✕</button>
+        </div>
+
+        <!-- Type Selector -->
+        <div class="type-selector">
+          <button type="button" class="type-btn active" data-type="expense">💸 Expense</button>
+          <button type="button" class="type-btn" data-type="income">💰 Income</button>
+          <button type="button" class="type-btn" data-type="investment">📈 Investment</button>
+        </div>
+
+        <!-- Smart Natural Language Entry -->
+        <div class="smart-input-container">
+          <label class="field-label" style="display:flex; justify-content:space-between; align-items:center;">
+            <span>⚡ QUICK SMART INPUT</span>
+            <span class="smart-hint-text">Auto-detects date, ₹, cat & mode</span>
+          </label>
+          <div class="smart-input-box">
+            <input type="text" id="smart-text-input" class="smart-text-input"
+              placeholder="e.g. yesterday 50 uber · 200 swiggy · 100 auto cash" autocomplete="off" />
+            <button type="button" id="smart-add-btn" class="smart-add-btn" title="Add / Parse Transaction">+</button>
+          </div>
+          <!-- Live Detection Badges -->
+          <div id="smart-preview" class="smart-preview hidden">
+            <span class="smart-pill smart-pill-amt" id="smart-preview-amt">₹0</span>
+            <span class="smart-pill smart-pill-cat" id="smart-preview-cat">🚗 Transport</span>
+            <span class="smart-pill smart-pill-date" id="smart-preview-date">📅 Yesterday</span>
+            <span class="smart-pill smart-pill-method" id="smart-preview-method">⚡ UPI</span>
+          </div>
+        </div>
+
+        <!-- Quick Amount Pills -->
+        <div class="amount-pills">
+          <button type="button" class="amount-pill" data-amount="50">₹50</button>
+          <button type="button" class="amount-pill" data-amount="100">₹100</button>
+          <button type="button" class="amount-pill" data-amount="200">₹200</button>
+          <button type="button" class="amount-pill" data-amount="500">₹500</button>
+          <button type="button" class="amount-pill" data-amount="1000">₹1k</button>
+          <button type="button" class="amount-pill" data-amount="2000">₹2k</button>
+        </div>
+
+        <!-- Amount -->
+        <div class="amount-input-wrapper">
+          <span class="currency-symbol">₹</span>
+          <input type="number" id="txn-amount" class="amount-input" placeholder="0" step="0.01" min="0"
+            inputmode="decimal">
+        </div>
+
+        <!-- Category -->
+        <label class="field-label">Category</label>
+        <div id="category-grid" class="category-grid"></div>
+
+        <!-- Note -->
+        <label class="field-label">Note</label>
+        <input type="text" id="txn-note" class="field-input" placeholder="What's this for?">
+
+        <!-- Payment Method (UPI & Cash Only) -->
+        <label class="field-label">Payment Method</label>
+        <div class="method-selector">
+          <button type="button" class="method-btn active" data-method="UPI">⚡ UPI</button>
+          <button type="button" class="method-btn" data-method="Cash">💵 Cash</button>
+        </div>
+
+        <!-- Date/Time -->
+        <label class="field-label">Date & Time</label>
+        <input type="datetime-local" id="txn-datetime" class="field-input">
+
+        <!-- Actions -->
+        <div class="modal-actions">
+          <button type="button" class="btn-cancel" id="modal-cancel">Cancel</button>
+          <button type="button" class="btn-primary btn-save" id="modal-save">Save Transaction</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════════ EDIT TRANSACTION MODAL ════════════ -->
+    <div id="edit-modal" class="modal-overlay hidden">
+      <div class="modal">
+        <div class="modal-handle"></div>
+        <div class="modal-header-row">
+          <h2 class="modal-title">Edit Transaction</h2>
+          <button type="button" class="modal-close-icon" id="edit-close-icon">✕</button>
+        </div>
+        <input type="hidden" id="edit-txn-id">
+
+        <div class="type-selector" id="edit-type-selector">
+          <button type="button" class="type-btn active" data-type="expense">💸 Expense</button>
+          <button type="button" class="type-btn" data-type="income">💰 Income</button>
+          <button type="button" class="type-btn" data-type="investment">📈 Investment</button>
+        </div>
+
+        <div class="amount-input-wrapper">
+          <span class="currency-symbol">₹</span>
+          <input type="number" id="edit-txn-amount" class="amount-input" placeholder="0" step="0.01" min="0"
+            inputmode="decimal">
+        </div>
+
+        <label class="field-label">Category</label>
+        <div id="edit-category-grid" class="category-grid"></div>
+
+        <label class="field-label">Note</label>
+        <input type="text" id="edit-txn-note" class="field-input" placeholder="What's this for?">
+
+        <!-- Payment Method (UPI & Cash Only) -->
+        <label class="field-label">Payment Method</label>
+        <div class="method-selector" id="edit-method-selector">
+          <button type="button" class="method-btn active" data-method="UPI">⚡ UPI</button>
+          <button type="button" class="method-btn" data-method="Cash">💵 Cash</button>
+        </div>
+
+        <label class="field-label">Date & Time</label>
+        <input type="datetime-local" id="edit-txn-datetime" class="field-input">
+
+        <div class="modal-actions">
+          <button type="button" class="btn-danger" id="edit-delete">Delete</button>
+          <button type="button" class="btn-cancel" id="edit-cancel">Cancel</button>
+          <button type="button" class="btn-primary btn-save" id="edit-save">Update</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast" class="toast hidden"></div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+
+</html>
