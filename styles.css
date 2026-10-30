@@ -1070,18 +1070,34 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator {
 .keyword-cat-group {
   background: var(--bg-card-hover);
   border-radius: var(--radius-sm);
-  padding: 8px 12px;
+  padding: 0 12px;
+  overflow: hidden;
 }
 
 .keyword-cat-header {
   font-size: 11px;
   font-weight: 700;
   color: var(--accent);
-  margin-bottom: 6px;
+  margin: 0;
+  min-height: 48px;
   display: flex;
   align-items: center;
   gap: 6px;
+  cursor: pointer;
+  list-style: none;
 }
+
+.keyword-cat-header::-webkit-details-marker { display: none; }
+.keyword-cat-header::after { content: '⌄'; margin-left: auto; color: var(--text-secondary); }
+.keyword-cat-group[open] .keyword-cat-header::after { content: '⌃'; }
+.keyword-count { margin-left: auto; padding: 3px 9px; border-radius: 999px; background: var(--accent); color: #111; font: 700 11px var(--mono); }
+.keyword-cat-group[open] .keyword-count { margin-left: 0; }
+.keyword-tags { padding: 0 0 10px; }
+.keyword-empty { color: var(--text-secondary); font-size: 12px; }
+.inline-keyword-row { padding: 0 0 12px; }
+.inline-keyword-row .name-input { flex: 1; min-width: 0; }
+.category-svg-icon { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 22px; width: 22px; height: 22px; vertical-align: middle; }
+.category-svg-icon svg { width: 20px; height: 20px; }
 
 .keyword-tags {
   display: flex;
@@ -1525,9 +1541,10 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator {
 }
 
 .collapsible-panel.visible {
-  max-height: 800px;
+  max-height: 70vh;
   opacity: 1;
   padding: 12px 16px;
+  overflow-y: auto;
 }
 
 .collapsible-panel.hidden {
@@ -1553,7 +1570,8 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator {
   font-size: 13px;
 }
 
-.category-item .cat-emoji { font-size: 16px; }
+.category-item .category-svg-icon { width: 34px; height: 34px; flex-basis: 34px; border: 1px solid currentColor; border-radius: 8px; background: var(--bg-card); }
+.category-item .category-svg-icon svg { width: 18px; height: 18px; }
 .category-item .cat-name { flex: 1; font-weight: 500; }
 .category-item .cat-type-label {
   font-size: 10px;

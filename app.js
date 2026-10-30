@@ -211,6 +211,12 @@ function getTransactionIcon(t, cat) {
   return `<span class="txn-svg-icon">${svg}</span>`;
 }
 
+function categoryIcon(category) {
+  const id = typeof category === 'string' ? category : category?.id;
+  const svg = CATEGORY_ICONS[id] || CATEGORY_ICONS.others;
+  return `<span class="category-svg-icon" style="color:${typeof category === 'object' ? category.color : 'currentColor'}">${svg}</span>`;
+}
+
 // ─── STATE ───
 let state = {
   settings: {
@@ -601,6 +607,7 @@ function deleteTransactionById(id) {
 // ─── STATS VIEW ───
 let donutChart = null;
 let trendChart = null;
+let investmentChart = null;
 
 function renderStats() {
   const txns = getTransactionsForMonth(state.currentMonth, state.currentYear);
@@ -633,10 +640,38 @@ function renderStats() {
 
   // Trend chart
   renderTrendChart();
+  renderInvestmentTrendChart();
 
   // Breakdown
   renderBreakdown(txns);
   renderInvestmentBreakdown(txns);
+}
+
+function renderInvestmentTrendChart() {
+  const months = [];
+  const investments = [];
+  for (let i = 5; i >= 0; i--) {
+    let month = state.currentMonth - i;
+    let year = state.currentYear;
+    if (month < 0) { month += 12; year--; }
+    months.push(getShortMonth(month));
+    investments.push(sumByType(getTransactionsForMonth(month, year), 'investment'));
+  }
+  const canvas = document.getElementById('investment-chart');
+  if (!canvas) return;
+  if (investmentChart) investmentChart.destroy();
+  investmentChart = new Chart(canvas.getContext('2d'), {
+    type: 'line',
+    data: { labels: months, datasets: [{ label: 'Investments', data: investments, borderColor: '#40C4FF', backgroundColor: 'rgba(64,196,255,0.16)', tension: 0.35, fill: true, pointRadius: 4, pointBackgroundColor: '#40C4FF', borderWidth: 2.5 }] },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      scales: {
+        x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#888' } },
+        y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#888', callback: v => '₹' + (v >= 1000 ? `${v / 1000}k` : v) } }
+      },
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => `Investments: ${formatCurrency(ctx.parsed.y)}` } } }
+    }
+  });
 }
 
 function renderDonutChart(txns) {
@@ -809,7 +844,7 @@ function renderInvestmentBreakdown(txns) {
   const categoryMap = {};
   investTxns.forEach(t => {
     const cat = getCategoryById(t.category);
-    if (!categoryMap[t.category]) categoryMap[t.category] = { name: cat.name, color: cat.color, emoji: cat.emoji, total: 0 };
+    if (!categoryMap[t.category]) categoryMap[t.category] = { name: cat.name, color: cat.color, id: cat.id, total: 0 };
     categoryMap[t.category].total += t.amount;
   });
 
@@ -828,7 +863,7 @@ function renderInvestmentBreakdown(txns) {
       <div>
         <div class="breakdown-item">
           <span class="breakdown-dot" style="background:${e.color}"></span>
-          <span class="breakdown-name">${e.emoji} ${e.name}</span>
+          <span class="breakdown-name">${categoryIcon(e.id)} ${e.name}</span>
           <span class="breakdown-amount" style="color:var(--invest)">${formatCurrency(e.total)}</span>
           <span class="breakdown-pct">${pct}%</span>
         </div>
@@ -937,7 +972,7 @@ function renderCategoriesList() {
   const container = document.getElementById('categories-list');
   container.innerHTML = state.settings.categories.map(c =>
     `<div class="category-item">
-      <span class="cat-emoji">${c.emoji}</span>
+      ${categoryIcon(c)}
       <span class="cat-name">${c.name}</span>
       <span class="cat-type-label">${c.type}</span>
       <button class="cat-remove-btn" data-id="${c.id}" title="Remove">×</button>
@@ -986,7 +1021,6 @@ function saveSettings() {
 }
 
 function addCategory() {
-  const emoji = document.getElementById('new-cat-emoji').value || '🏷️';
   const name = document.getElementById('new-cat-name').value.trim();
   const color = document.getElementById('new-cat-color').value;
   const type = document.getElementById('new-cat-type').value;
@@ -999,11 +1033,10 @@ function addCategory() {
 
   state.settings.categories.push({
     id: name.toLowerCase().replace(/\s+/g, '_'),
-    emoji, name, color, type,
+    name, color, type,
   });
 
   saveData();
-  document.getElementById('new-cat-emoji').value = '';
   document.getElementById('new-cat-name').value = '';
   renderCategoriesList();
   document.getElementById('category-count').textContent = `${state.settings.categories.length} Categories`;
@@ -1022,6 +1055,23 @@ function formatForDateTimeLocal(d) {
 }
 
 // ─── SMART NATURAL LANGUAGE PARSER ───
+function detectCategoryFromText(value) {
+  const text = (value || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+  if (!text) return null;
+  const keywordMap = state.settings?.keywords || DEFAULT_KEYWORDS;
+  const matches = [];
+  Object.entries(keywordMap).forEach(([categoryId, words]) => (words || []).forEach(word => {
+    const normalized = word.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+    if (normalized && (` ${text} `).includes(` ${normalized} `)) matches.push({ categoryId, length: normalized.length });
+  }));
+  matches.sort((a, b) => b.length - a.length);
+  if (matches.length) return matches[0].categoryId;
+  return state.settings.categories.find(cat => {
+    const names = [cat.name, cat.id.replace(/_/g, ' ')].map(v => v.toLowerCase());
+    return names.some(name => (` ${text} `).includes(` ${name} `));
+  })?.id || null;
+}
+
 function parseSmartText(rawText) {
   if (!rawText || !rawText.trim()) return null;
   let text = rawText.trim();
@@ -1105,41 +1155,8 @@ function parseSmartText(rawText) {
 
   // 5. Check Category from keywords
   const cleaned = text.replace(/[^a-zA-Z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
-  const lowerWords = cleaned.toLowerCase().split(' ').filter(Boolean);
 
-  const keywords = (state.settings && state.settings.keywords) || DEFAULT_KEYWORDS;
-  let detectedCat = null;
-
-  // First check exact keyword matches in word list or prefix match (e.g. "foo" -> "food")
-  for (const word of lowerWords) {
-    for (const [catId, words] of Object.entries(keywords)) {
-      if (words.some(kw => kw.toLowerCase() === word || (word.length >= 3 && kw.toLowerCase().startsWith(word)))) {
-        detectedCat = catId;
-        break;
-      }
-    }
-    if (detectedCat) break;
-  }
-
-  // If not found, check partial/substring matches
-  if (!detectedCat) {
-    for (const [catId, words] of Object.entries(keywords)) {
-      if (words.some(kw => cleaned.toLowerCase().includes(kw.toLowerCase()))) {
-        detectedCat = catId;
-        break;
-      }
-    }
-  }
-
-  // Also match category names directly or prefix
-  if (!detectedCat) {
-    for (const cat of (state.settings.categories || DEFAULT_CATEGORIES)) {
-      if (lowerWords.includes(cat.id.toLowerCase()) || lowerWords.includes(cat.name.toLowerCase()) || (lowerWords.some(w => w.length >= 3 && cat.id.toLowerCase().startsWith(w)))) {
-        detectedCat = cat.id;
-        break;
-      }
-    }
-  }
+  const detectedCat = detectCategoryFromText(cleaned);
 
   result.category = detectedCat || 'others';  // fallback to "others" for unknown items
   if (detectedCat) {
@@ -1239,7 +1256,7 @@ function renderCategoryGrid() {
   });
 
   grid.innerHTML = cats.map(c =>
-    `<button type="button" class="cat-btn${selectedCategory === c.id ? ' active' : ''}" data-id="${c.id}">${c.emoji} ${c.name}</button>`
+    `<button type="button" class="cat-btn${selectedCategory === c.id ? ' active' : ''}" data-id="${c.id}">${categoryIcon(c)} ${c.name}</button>`
   ).join('');
 
   grid.querySelectorAll('.cat-btn').forEach(btn => {
@@ -1269,7 +1286,7 @@ function updateCatChip() {
   const chip = document.getElementById('cat-selected-chip');
   if (!chip) return;
   const cat = getCategoryById(selectedCategory);
-  chip.textContent = cat ? `${cat.emoji} ${cat.name}` : '— pick a category';
+  chip.innerHTML = cat ? `${categoryIcon(cat)} ${cat.name}` : '— pick a category';
 }
 
 function renderMethodButtons() {
@@ -1320,7 +1337,7 @@ function handleSmartTextInput() {
       renderCategoryGrid();
     }
     if (catPill) {
-      catPill.textContent = `${catObj.emoji} ${catObj.name}`;
+      catPill.innerHTML = `${categoryIcon(catObj)} ${catObj.name}`;
       catPill.style.display = 'inline-flex';
     }
     updateCatChip();
@@ -1450,7 +1467,7 @@ function updateEditCatChip() {
   const chip = document.getElementById('edit-cat-selected-chip');
   if (!chip) return;
   const cat = getCategoryById(editCategory);
-  chip.textContent = cat ? `${cat.emoji} ${cat.name}` : '— pick a category';
+  chip.innerHTML = cat ? `${categoryIcon(cat)} ${cat.name}` : '— pick a category';
 }
 
 function renderEditTypeButtons() {
@@ -1470,7 +1487,7 @@ function renderEditCategoryGrid() {
   });
 
   grid.innerHTML = cats.map(c =>
-    `<button type="button" class="cat-btn${editCategory === c.id ? ' active' : ''}" data-id="${c.id}">${c.emoji} ${c.name}</button>`
+    `<button type="button" class="cat-btn${editCategory === c.id ? ' active' : ''}" data-id="${c.id}">${categoryIcon(c)} ${c.name}</button>`
   ).join('');
 
   grid.querySelectorAll('.cat-btn').forEach(btn => {
@@ -1534,19 +1551,19 @@ function renderKeywordsList() {
   if (!container) return;
   const keywords = state.settings.keywords || DEFAULT_KEYWORDS;
   const cats = state.settings.categories;
-
-  container.innerHTML = Object.entries(keywords).map(([catId, words]) => {
-    const cat = getCategoryById(catId);
-    if (!words || words.length === 0) return '';
+  container.innerHTML = cats.map(cat => {
+    const words = keywords[cat.id] || [];
     const tagsHtml = words.map(w =>
-      `<span class="keyword-tag">${w} <span class="keyword-tag-remove" data-cat="${catId}" data-word="${w}">✕</span></span>`
+      `<span class="keyword-tag">${w} <button type="button" class="keyword-tag-remove" data-cat="${cat.id}" data-word="${w}" aria-label="Remove ${w}">×</button></span>`
     ).join('');
-    return `
-      <div class="keyword-cat-group">
-        <div class="keyword-cat-header">${cat.emoji} ${cat.name}</div>
-        <div class="keyword-tags">${tagsHtml}</div>
+    return `<details class="keyword-cat-group">
+      <summary class="keyword-cat-header">${categoryIcon(cat)} ${cat.name}<span class="keyword-count">${words.length}</span></summary>
+      <div class="keyword-tags">${tagsHtml || '<span class="keyword-empty">No keywords yet</span>'}</div>
+      <div class="add-keyword-row inline-keyword-row">
+        <input type="text" class="cat-input name-input inline-keyword-input" data-cat="${cat.id}" placeholder="Add keyword...">
+        <button type="button" class="cat-add-btn inline-keyword-add" data-cat="${cat.id}">ADD</button>
       </div>
-    `;
+    </details>`;
   }).join('');
 
   container.querySelectorAll('.keyword-tag-remove').forEach(btn => {
@@ -1563,10 +1580,30 @@ function renderKeywordsList() {
     });
   });
 
+  container.querySelectorAll('.inline-keyword-add').forEach(btn => btn.addEventListener('click', () => addKeywordToCategory(btn.dataset.cat)));
+  container.querySelectorAll('.inline-keyword-input').forEach(input => input.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); addKeywordToCategory(input.dataset.cat); }
+  }));
+
   const select = document.getElementById('kw-category-select');
   if (select) {
-    select.innerHTML = cats.map(c => `<option value="${c.id}">${c.emoji} ${c.name}</option>`).join('');
+    select.innerHTML = cats.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
   }
+}
+
+function addKeywordToCategory(catId) {
+  const input = [...document.querySelectorAll('.inline-keyword-input')].find(el => el.dataset.cat === catId);
+  const word = input?.value.trim().toLowerCase();
+  if (!word) { showToast('Enter a keyword'); return; }
+  state.settings.keywords ||= {};
+  state.settings.keywords[catId] ||= [];
+  if (state.settings.keywords[catId].includes(word)) { showToast('Keyword already exists'); return; }
+  state.settings.keywords[catId].push(word);
+  saveData();
+  renderKeywordsList();
+  const group = [...document.querySelectorAll('.keyword-cat-group')].find(el => el.querySelector('.inline-keyword-input')?.dataset.cat === catId);
+  if (group) group.open = true;
+  showToast(`Added "${word}" to ${getCategoryById(catId).name}`);
 }
 
 function addKeyword() {
@@ -1799,18 +1836,15 @@ function initEventListeners() {
   if (txnNote) {
     txnNote.addEventListener('input', (e) => {
       const noteVal = e.target.value.trim().toLowerCase();
-      const keywords = (state.settings && state.settings.keywords) || DEFAULT_KEYWORDS;
-      for (const [catId, words] of Object.entries(keywords)) {
-        if (words.some(kw => noteVal.includes(kw.toLowerCase()))) {
-          selectedCategory = catId;
-          const catObj = getCategoryById(catId);
-          if (catObj && catObj.type && currentType !== catObj.type) {
-            currentType = catObj.type;
-            renderModalTypeButtons();
-          } else {
-            renderCategoryGrid();
-          }
-          break;
+      const detected = detectCategoryFromText(noteVal);
+      if (detected) {
+        selectedCategory = detected;
+        const catObj = getCategoryById(detected);
+        if (catObj && catObj.type && currentType !== catObj.type) {
+          currentType = catObj.type;
+          renderModalTypeButtons();
+        } else {
+          renderCategoryGrid();
         }
       }
     });
@@ -1863,14 +1897,7 @@ function initEventListeners() {
   if (editTxnNote) {
     editTxnNote.addEventListener('input', (e) => {
       const noteVal = e.target.value.trim().toLowerCase();
-      const keywords = (state.settings && state.settings.keywords) || DEFAULT_KEYWORDS;
-      let found = null;
-      for (const [catId, words] of Object.entries(keywords)) {
-        if (words.some(kw => noteVal.includes(kw.toLowerCase()))) {
-          found = catId;
-          break;
-        }
-      }
+      const found = detectCategoryFromText(noteVal);
       if (found) {
         editCategory = found;
         const catObj = getCategoryById(found);
