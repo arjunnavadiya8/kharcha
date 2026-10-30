@@ -200,13 +200,6 @@ const BRAND_DOMAINS = {
 };
 
 function getTransactionIcon(t, cat) {
-  const note = (t.note || '').toLowerCase();
-  for (const [brand, domain] of Object.entries(BRAND_DOMAINS)) {
-    if (new RegExp(`\\b${brand.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i').test(note)) {
-      const fallbackSvg = CATEGORY_ICONS[t.category] || (cat && CATEGORY_ICONS[cat.id]) || CATEGORY_ICONS.others;
-      return `<span class="txn-brand-icon"><img src="https://www.google.com/s2/favicons?domain=${domain}&sz=64" alt="" aria-hidden="true" class="txn-favicon" onerror="this.hidden=true;this.nextElementSibling.hidden=false"><span class="txn-svg-icon" hidden>${fallbackSvg}</span></span>`;
-    }
-  }
   const svg = CATEGORY_ICONS[t.category] || (cat && CATEGORY_ICONS[cat.id]) || CATEGORY_ICONS.others;
   return `<span class="txn-svg-icon">${svg}</span>`;
 }
