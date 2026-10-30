@@ -339,6 +339,8 @@ a { text-decoration: none; color: inherit; }
   z-index: 1;
 }
 
+.txn-delete-bg svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
 .txn-item {
   position: relative;
   z-index: 2;
@@ -876,6 +878,8 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator {
   box-shadow: 0 4px 16px rgba(255, 214, 0, 0.3);
   transform: translateY(-1px);
 }
+
+.method-btn svg, .smart-pill svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex: 0 0 16px; }
 
 /* ── SMART NATURAL LANGUAGE INPUT ── */
 .smart-input-container {
@@ -1630,7 +1634,6 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator {
   font-size: 12px;
 }
 
-.emoji-input { width: 42px; text-align: center; font-size: 16px; }
 .name-input { flex: 1; min-width: 80px; }
 .color-input { width: 36px; height: 36px; padding: 2px; cursor: pointer; }
 .type-input { width: 90px; }

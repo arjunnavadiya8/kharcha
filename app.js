@@ -4,25 +4,25 @@
 
 // ─── DEFAULT CATEGORIES ───
 const DEFAULT_CATEGORIES = [
-  { id: 'food', emoji: '🍕', name: 'Food', color: '#FF6B6B', type: 'expense' },
-  { id: 'transport', emoji: '🚗', name: 'Transport', color: '#4ECDC4', type: 'expense' },
-  { id: 'shopping', emoji: '🛍️', name: 'Shopping', color: '#A78BFA', type: 'expense' },
-  { id: 'entertainment', emoji: '🎬', name: 'Entertainment', color: '#F472B6', type: 'expense' },
-  { id: 'bills', emoji: '💡', name: 'Bills', color: '#FBBF24', type: 'expense' },
-  { id: 'health', emoji: '🏥', name: 'Health', color: '#34D399', type: 'expense' },
-  { id: 'education', emoji: '📚', name: 'Education', color: '#60A5FA', type: 'expense' },
-  { id: 'rent', emoji: '🏠', name: 'Rent', color: '#F97316', type: 'expense' },
-  { id: 'groceries', emoji: '🛒', name: 'Groceries', color: '#22D3EE', type: 'expense' },
-  { id: 'subscriptions', emoji: '📱', name: 'Subscriptions', color: '#C084FC', type: 'expense' },
-  { id: 'gifts', emoji: '🎁', name: 'Gifts', color: '#FB7185', type: 'expense' },
-  { id: 'salary', emoji: '💼', name: 'Salary', color: '#00E676', type: 'income' },
-  { id: 'stocks', emoji: '📈', name: 'Stocks & Equity', color: '#40C4FF', type: 'investment' },
-  { id: 'mutual_funds', emoji: '📊', name: 'Mutual Funds / SIP', color: '#00E676', type: 'investment' },
-  { id: 'crypto', emoji: '🪙', name: 'Crypto', color: '#FBBF24', type: 'investment' },
-  { id: 'gold', emoji: '🏆', name: 'Gold & Silver', color: '#FFD600', type: 'investment' },
-  { id: 'fd_ppf', emoji: '🏦', name: 'FD / PPF / EPF', color: '#A78BFA', type: 'investment' },
-  { id: 'real_estate', emoji: '🏢', name: 'Real Estate', color: '#FB7185', type: 'investment' },
-  { id: 'others', emoji: '⚡', name: 'Others', color: '#888888', type: 'expense' },
+  { id: 'food', name: 'Food', color: '#FF6B6B', type: 'expense' },
+  { id: 'transport', name: 'Transport', color: '#4ECDC4', type: 'expense' },
+  { id: 'shopping', name: 'Shopping', color: '#A78BFA', type: 'expense' },
+  { id: 'entertainment', name: 'Entertainment', color: '#F472B6', type: 'expense' },
+  { id: 'bills', name: 'Bills', color: '#FBBF24', type: 'expense' },
+  { id: 'health', name: 'Health', color: '#34D399', type: 'expense' },
+  { id: 'education', name: 'Education', color: '#60A5FA', type: 'expense' },
+  { id: 'rent', name: 'Rent', color: '#F97316', type: 'expense' },
+  { id: 'groceries', name: 'Groceries', color: '#22D3EE', type: 'expense' },
+  { id: 'subscriptions', name: 'Subscriptions', color: '#C084FC', type: 'expense' },
+  { id: 'gifts', name: 'Gifts', color: '#FB7185', type: 'expense' },
+  { id: 'salary', name: 'Salary', color: '#00E676', type: 'income' },
+  { id: 'stocks', name: 'Stocks & Equity', color: '#40C4FF', type: 'investment' },
+  { id: 'mutual_funds', name: 'Mutual Funds / SIP', color: '#00E676', type: 'investment' },
+  { id: 'crypto', name: 'Crypto', color: '#FBBF24', type: 'investment' },
+  { id: 'gold', name: 'Gold & Silver', color: '#FFD600', type: 'investment' },
+  { id: 'fd_ppf', name: 'FD / PPF / EPF', color: '#A78BFA', type: 'investment' },
+  { id: 'real_estate', name: 'Real Estate', color: '#FB7185', type: 'investment' },
+  { id: 'others', name: 'Others', color: '#888888', type: 'expense' },
 ];
 
 // ─── OUTLINE SVG ICONS FOR CATEGORIES (MATCHING MINIMALIST OUTLINE STYLE) ───
@@ -217,6 +217,16 @@ function categoryIcon(category) {
   return `<span class="category-svg-icon" style="color:${typeof category === 'object' ? category.color : 'currentColor'}">${svg}</span>`;
 }
 
+const METHOD_ICONS = {
+  UPI: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m13 2-9 12h7l-1 8 10-13h-7z"/></svg>',
+  Cash: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2"/><circle cx="12" cy="12" r="3"/><path d="M6 9h.01M18 15h.01"/></svg>',
+};
+
+const UI_ICONS = {
+  calendar: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg>',
+  trash: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2m3 0-1 14H6L5 6m4 4v6m6-6v6"/></svg>',
+};
+
 // ─── STATE ───
 let state = {
   settings: {
@@ -346,7 +356,7 @@ function getDateLabel(dateStr) {
 }
 
 function getCategoryById(id) {
-  return state.settings.categories.find(c => c.id === id) || { emoji: '⚡', name: 'Others', color: '#888', type: 'expense' };
+  return state.settings.categories.find(c => c.id === id) || { id: 'others', name: 'Others', color: '#888', type: 'expense' };
 }
 
 function getTransactionsForMonth(m, y) {
@@ -492,11 +502,11 @@ function renderHome() {
 
 function renderTransactionItem(t) {
   const cat = getCategoryById(t.category);
-  const prefix = t.type === 'income' ? '+' : t.type === 'investment' ? '↗ ' : '-';
+  const prefix = t.type === 'income' ? '+' : t.type === 'investment' ? 'INVEST ' : '-';
   const iconHtml = getTransactionIcon(t, cat);
   return `
     <div class="txn-swipe-wrap" data-id="${t.id}">
-      <div class="txn-delete-bg">🗑 Delete</div>
+      <div class="txn-delete-bg">${UI_ICONS.trash}<span>Delete</span></div>
       <div class="txn-item" data-id="${t.id}">
         <div class="txn-icon" style="border-color:${cat.color}40">${iconHtml}</div>
         <div class="txn-details">
@@ -1292,8 +1302,14 @@ function updateCatChip() {
 
 function renderMethodButtons() {
   document.querySelectorAll('#add-modal .method-btn').forEach(btn => {
+    setMethodButtonContent(btn);
     btn.classList.toggle('active', btn.dataset.method === selectedMethod);
   });
+}
+
+function setMethodButtonContent(button) {
+  const method = button.dataset.method;
+  button.innerHTML = `${METHOD_ICONS[method] || ''}<span>${method}</span>`;
 }
 
 function handleSmartTextInput() {
@@ -1351,7 +1367,7 @@ function handleSmartTextInput() {
   if (parsed.date) {
     document.getElementById('txn-datetime').value = formatForDateTimeLocal(parsed.date);
     if (datePill) {
-      datePill.textContent = '📅 ' + getDateLabel(parsed.date);
+      datePill.innerHTML = `${UI_ICONS.calendar}<span>${getDateLabel(parsed.date)}</span>`;
       datePill.style.display = 'inline-flex';
     }
   } else {
@@ -1364,7 +1380,7 @@ function handleSmartTextInput() {
     selectedMethod = parsed.method;
     renderMethodButtons();
     if (methodPill) {
-      methodPill.textContent = (selectedMethod === 'UPI' ? '⚡ ' : '💵 ') + selectedMethod;
+      methodPill.innerHTML = `${METHOD_ICONS[selectedMethod] || ''}<span>${selectedMethod}</span>`;
       methodPill.style.display = 'inline-flex';
     }
   } else {
@@ -1519,6 +1535,7 @@ function renderEditCategoryGrid() {
 
 function renderEditMethodButtons() {
   document.querySelectorAll('#edit-method-selector .method-btn').forEach(btn => {
+    setMethodButtonContent(btn);
     btn.classList.toggle('active', btn.dataset.method === editMethod);
   });
 }
