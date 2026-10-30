@@ -12,6 +12,7 @@
     href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap"
     rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💸</text></svg>">
   <link rel="stylesheet" href="styles.css">
 </head>
 
@@ -499,8 +500,13 @@
             inputmode="decimal">
         </div>
 
-        <label class="field-label">Category</label>
-        <div id="edit-category-grid" class="category-grid"></div>
+        <!-- Category compact chip (Edit Modal) -->
+        <div class="cat-chip-row">
+          <span class="field-label" style="margin-bottom:0">Category</span>
+          <div id="edit-cat-selected-chip" class="cat-selected-chip"></div>
+          <button type="button" id="toggle-edit-cat-grid-btn" class="cat-toggle-btn">change</button>
+        </div>
+        <div id="edit-category-grid" class="category-grid" style="display:none; margin-top:10px;"></div>
 
         <label class="field-label">Note</label>
         <input type="text" id="edit-txn-note" class="field-input" placeholder="What's this for?">

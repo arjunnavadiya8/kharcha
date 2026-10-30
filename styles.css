@@ -311,7 +311,38 @@ a { text-decoration: none; color: inherit; }
   gap: 8px;
 }
 
+/* ── SWIPE TO DELETE ── */
+.txn-swipe-wrap {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius);
+  background: var(--expense);
+  touch-action: pan-y;
+  user-select: none;
+}
+
+.txn-delete-bg {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 85px;
+  background: var(--expense);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 13px;
+  gap: 4px;
+  cursor: pointer;
+  z-index: 1;
+}
+
 .txn-item {
+  position: relative;
+  z-index: 2;
+  width: 100%;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -320,15 +351,13 @@ a { text-decoration: none; color: inherit; }
   border: 1px solid var(--border);
   border-radius: var(--radius);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), background 0.2s;
+  will-change: transform;
 }
 
 .txn-item:hover {
   background: var(--bg-card-hover);
-  transform: translateX(2px);
 }
-
-.txn-item:active { transform: scale(0.98); }
 
 .txn-icon {
   width: 40px;
@@ -341,6 +370,15 @@ a { text-decoration: none; color: inherit; }
   flex-shrink: 0;
   border: 1px solid var(--border);
   background: var(--bg-card-hover);
+  overflow: hidden;
+}
+
+.txn-favicon {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  object-fit: contain;
+  display: block;
 }
 
 .txn-details {
@@ -672,6 +710,57 @@ a { text-decoration: none; color: inherit; }
 /* color scheme for date inputs */
 input[type="datetime-local"]::-webkit-calendar-picker-indicator {
   filter: invert(1);
+}
+
+/* ── COMPACT CATEGORY CHIP ROW (Add Modal) ── */
+.cat-chip-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.cat-selected-chip {
+  flex: 1;
+  padding: 8px 14px;
+  background: var(--accent-dim);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-pill);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--accent);
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+}
+
+.cat-toggle-btn {
+  padding: 6px 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.cat-toggle-btn:hover {
+  background: var(--bg-card-hover);
+  color: var(--text);
+  border-color: var(--border-strong);
+}
+
+.cat-toggle-btn.open {
+  color: var(--accent);
+  border-color: var(--accent);
 }
 
 /* ── CATEGORY GRID ── */
@@ -1826,51 +1915,4 @@ body.light-theme .amount-input-wrapper {
 body.light-theme .keyword-tag {
   background: rgba(0, 0, 0, 0.08);
   color: #111827;
-}
-
-/* -- COMPACT CATEGORY CHIP ROW (Add Modal) -- */
-.cat-chip-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 16px;
-}
-.cat-selected-chip {
-  flex: 1;
-  padding: 8px 14px;
-  background: var(--accent-dim);
-  border: 1px solid var(--accent);
-  border-radius: var(--radius-pill);
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--accent);
-  min-height: 36px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  transition: all 0.2s;
-}
-.cat-toggle-btn {
-  padding: 6px 12px;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-pill);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.5px;
-  color: var(--text-secondary);
-  text-transform: uppercase;
-  cursor: pointer;
-  transition: all 0.2s;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-.cat-toggle-btn:hover {
-  background: var(--bg-card-hover);
-  color: var(--text);
-  border-color: var(--border-strong);
-}
-.cat-toggle-btn.open {
-  color: var(--accent);
-  border-color: var(--accent);
 }

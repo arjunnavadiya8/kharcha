@@ -48,6 +48,72 @@ const DEFAULT_KEYWORDS = {
   others: ['other', 'misc']
 };
 
+// ─── BRAND DOMAINS FOR FAVICONS ───
+const BRAND_DOMAINS = {
+  rapido: 'rapido.bike',
+  uber: 'uber.com',
+  ola: 'olacabs.com',
+  swiggy: 'swiggy.com',
+  zomato: 'zomato.com',
+  blinkit: 'blinkit.com',
+  zepto: 'zeptonow.com',
+  instamart: 'swiggy.com',
+  bigbasket: 'bigbasket.com',
+  dmart: 'dmart.in',
+  amazon: 'amazon.in',
+  flipkart: 'flipkart.com',
+  myntra: 'myntra.com',
+  ajio: 'ajio.com',
+  zara: 'zara.com',
+  meesho: 'meesho.com',
+  nykaa: 'nykaa.com',
+  netflix: 'netflix.com',
+  prime: 'primevideo.com',
+  hotstar: 'hotstar.com',
+  spotify: 'spotify.com',
+  youtube: 'youtube.com',
+  bookmyshow: 'bookmyshow.com',
+  airtel: 'airtel.in',
+  jio: 'jio.com',
+  vi: 'myvi.in',
+  bescom: 'bescom.karnataka.gov.in',
+  apollo: 'apollopharmacy.in',
+  pharmeasy: 'pharmeasy.in',
+  '1mg': '1mg.com',
+  udemy: 'udemy.com',
+  coursera: 'coursera.com',
+  chatgpt: 'chatgpt.com',
+  openai: 'openai.com',
+  zerodha: 'zerodha.com',
+  groww: 'groww.in',
+  angelone: 'angelone.in',
+  upstox: 'upstox.com',
+  binance: 'binance.com',
+  wazirx: 'wazirx.com',
+  coindcx: 'coindcx.com',
+  coinbase: 'coinbase.com',
+  kfc: 'kfc.co.in',
+  mcdonalds: 'mcdonaldsindia.com',
+  starbucks: 'starbucks.in',
+  dominos: 'dominos.co.in',
+  subway: 'subway.com',
+  irctc: 'irctc.co.in',
+  fastag: 'fastag.ihmcl.com',
+  indigo: 'goindigo.in',
+  apple: 'apple.com',
+  google: 'google.com'
+};
+
+function getTransactionIcon(t, cat) {
+  const note = (t.note || '').toLowerCase();
+  for (const [brand, domain] of Object.entries(BRAND_DOMAINS)) {
+    if (note.includes(brand)) {
+      return `<img src="https://www.google.com/s2/favicons?domain=${domain}&sz=64" alt="${brand}" class="txn-favicon" onerror="this.outerHTML='<span>${cat.emoji}</span>'">`;
+    }
+  }
+  return `<span>${cat.emoji}</span>`;
+}
+
 // ─── STATE ───
 let state = {
   settings: {
@@ -288,31 +354,122 @@ function renderHome() {
     container.innerHTML = '<div class="empty-state">No transactions yet. Tap + to add one!</div>';
   } else {
     container.innerHTML = sorted.map(t => renderTransactionItem(t)).join('');
-    container.querySelectorAll('.txn-item').forEach(el => {
-      el.addEventListener('click', () => openEditModal(el.dataset.id));
-    });
+    setupSwipeToDelete(container);
   }
 }
 
 function renderTransactionItem(t) {
   const cat = getCategoryById(t.category);
   const prefix = t.type === 'income' ? '+' : t.type === 'investment' ? '↗ ' : '-';
+  const iconHtml = getTransactionIcon(t, cat);
   return `
-    <div class="txn-item" data-id="${t.id}">
-      <div class="txn-icon" style="border-color:${cat.color}40">${cat.emoji}</div>
-      <div class="txn-details">
-        <div class="txn-name">${t.note || cat.name}</div>
-        <div class="txn-meta">
-          <span class="txn-category-tag">${cat.name.toUpperCase()}</span>
-          <span>${t.method || 'Cash'}</span>
+    <div class="txn-swipe-wrap" data-id="${t.id}">
+      <div class="txn-delete-bg">🗑 Delete</div>
+      <div class="txn-item" data-id="${t.id}">
+        <div class="txn-icon" style="border-color:${cat.color}40">${iconHtml}</div>
+        <div class="txn-details">
+          <div class="txn-name">${t.note || cat.name}</div>
+          <div class="txn-meta">
+            <span class="txn-category-tag">${cat.name.toUpperCase()}</span>
+            <span>${t.method || 'Cash'}</span>
+          </div>
         </div>
-      </div>
-      <div class="txn-right">
-        <div class="txn-amount ${t.type}">${prefix}${formatCurrency(t.amount)}</div>
-        <div class="txn-time">${formatTime(t.date)}</div>
+        <div class="txn-right">
+          <div class="txn-amount ${t.type}">${prefix}${formatCurrency(t.amount)}</div>
+          <div class="txn-time">${formatTime(t.date)}</div>
+        </div>
       </div>
     </div>
   `;
+}
+
+function setupSwipeToDelete(container) {
+  container.querySelectorAll('.txn-swipe-wrap').forEach(wrap => {
+    const txnItem = wrap.querySelector('.txn-item');
+    const deleteBtn = wrap.querySelector('.txn-delete-bg');
+    const id = wrap.dataset.id;
+    if (!txnItem) return;
+
+    let startX = 0;
+    let startY = 0;
+    let currentX = 0;
+    let isSwiping = false;
+    let isOpen = false;
+
+    if (deleteBtn) {
+      deleteBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        deleteTransactionById(id);
+      });
+    }
+
+    wrap.addEventListener('touchstart', (e) => {
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+      currentX = 0;
+      isSwiping = false;
+      txnItem.style.transition = 'none';
+    }, { passive: true });
+
+    wrap.addEventListener('touchmove', (e) => {
+      const touchX = e.touches[0].clientX;
+      const touchY = e.touches[0].clientY;
+      const dx = touchX - startX;
+      const dy = touchY - startY;
+
+      if (!isSwiping && Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy)) {
+        isSwiping = true;
+      }
+
+      if (isSwiping) {
+        const base = isOpen ? -85 : 0;
+        const targetX = base + dx;
+        currentX = Math.min(10, Math.max(targetX, -160));
+        txnItem.style.transform = `translateX(${currentX}px)`;
+      }
+    }, { passive: true });
+
+    wrap.addEventListener('touchend', () => {
+      txnItem.style.transition = 'transform 0.25s cubic-bezier(0.16, 1, 0.3, 1)';
+      if (isSwiping) {
+        if (currentX < -130) {
+          txnItem.style.transform = 'translateX(-100%)';
+          setTimeout(() => deleteTransactionById(id), 220);
+          return;
+        }
+        if (currentX < -40) {
+          txnItem.style.transform = 'translateX(-85px)';
+          isOpen = true;
+        } else {
+          txnItem.style.transform = 'translateX(0)';
+          isOpen = false;
+        }
+      } else {
+        if (isOpen) {
+          txnItem.style.transform = 'translateX(0)';
+          isOpen = false;
+        } else {
+          openEditModal(id);
+        }
+      }
+    });
+
+    txnItem.addEventListener('click', (e) => {
+      if (isOpen) {
+        e.stopPropagation();
+        txnItem.style.transition = 'transform 0.25s cubic-bezier(0.16, 1, 0.3, 1)';
+        txnItem.style.transform = 'translateX(0)';
+        isOpen = false;
+      }
+    });
+  });
+}
+
+function deleteTransactionById(id) {
+  state.transactions = state.transactions.filter(t => t.id !== id);
+  saveData();
+  showToast('Transaction deleted');
+  renderCurrentView();
 }
 
 // ─── STATS VIEW ───
@@ -599,9 +756,7 @@ function renderHistory() {
   });
 
   container.innerHTML = html;
-  container.querySelectorAll('.txn-item').forEach(el => {
-    el.addEventListener('click', () => openEditModal(el.dataset.id));
-  });
+  setupSwipeToDelete(container);
 }
 
 function renderFilterPills(txns) {
@@ -855,7 +1010,7 @@ function parseSmartText(rawText) {
     }
   }
 
-  result.category = detectedCat;
+  result.category = detectedCat || 'others';  // fallback to "others" for unknown items
   if (detectedCat) {
     const catObj = getCategoryById(detectedCat);
     if (catObj && catObj.type) {
@@ -1104,7 +1259,7 @@ function openEditModal(txnId) {
   if (!txn) return;
 
   editType = txn.type;
-  editCategory = txn.category;
+  editCategory = txn.category || 'others';
   editMethod = (txn.method === 'Cash') ? 'Cash' : 'UPI'; // UPI & Cash only
 
   document.getElementById('edit-txn-id').value = txn.id;
@@ -1117,12 +1272,25 @@ function openEditModal(txnId) {
   renderEditTypeButtons();
   renderEditCategoryGrid();
   renderEditMethodButtons();
+  updateEditCatChip();
+
+  const editGrid = document.getElementById('edit-category-grid');
+  if (editGrid) editGrid.style.display = 'none';
+  const toggleBtn = document.getElementById('toggle-edit-cat-grid-btn');
+  if (toggleBtn) toggleBtn.classList.remove('open');
 
   document.getElementById('edit-modal').classList.remove('hidden');
 }
 
 function closeEditModal() {
   document.getElementById('edit-modal').classList.add('hidden');
+}
+
+function updateEditCatChip() {
+  const chip = document.getElementById('edit-cat-selected-chip');
+  if (!chip) return;
+  const cat = getCategoryById(editCategory);
+  chip.textContent = cat ? `${cat.emoji} ${cat.name}` : '— pick a category';
 }
 
 function renderEditTypeButtons() {
@@ -1134,6 +1302,7 @@ function renderEditTypeButtons() {
 
 function renderEditCategoryGrid() {
   const grid = document.getElementById('edit-category-grid');
+  if (!grid) return;
   const cats = state.settings.categories.filter(c => {
     if (editType === 'income') return c.type === 'income' || c.id === 'others';
     if (editType === 'investment') return c.type === 'investment' || c.id === 'others';
@@ -1149,8 +1318,14 @@ function renderEditCategoryGrid() {
       editCategory = btn.dataset.id;
       grid.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
+      updateEditCatChip();
+      grid.style.display = 'none';
+      const toggleBtn = document.getElementById('toggle-edit-cat-grid-btn');
+      if (toggleBtn) toggleBtn.classList.remove('open');
     });
   });
+
+  updateEditCatChip();
 }
 
 function renderEditMethodButtons() {
@@ -1509,6 +1684,44 @@ function initEventListeners() {
       const isOpen = grid.style.display !== 'none';
       grid.style.display = isOpen ? 'none' : 'flex';
       toggleCatBtn.classList.toggle('open', !isOpen);
+    });
+  }
+
+  // Edit modal category toggle button
+  const toggleEditCatBtn = document.getElementById('toggle-edit-cat-grid-btn');
+  if (toggleEditCatBtn) {
+    toggleEditCatBtn.addEventListener('click', () => {
+      const grid = document.getElementById('edit-category-grid');
+      const isOpen = grid.style.display !== 'none';
+      grid.style.display = isOpen ? 'none' : 'flex';
+      toggleEditCatBtn.classList.toggle('open', !isOpen);
+    });
+  }
+
+  // Edit modal auto-detect category on Note change
+  const editTxnNote = document.getElementById('edit-txn-note');
+  if (editTxnNote) {
+    editTxnNote.addEventListener('input', (e) => {
+      const noteVal = e.target.value.trim().toLowerCase();
+      const keywords = (state.settings && state.settings.keywords) || DEFAULT_KEYWORDS;
+      let found = null;
+      for (const [catId, words] of Object.entries(keywords)) {
+        if (words.some(kw => noteVal.includes(kw.toLowerCase()))) {
+          found = catId;
+          break;
+        }
+      }
+      if (found) {
+        editCategory = found;
+        const catObj = getCategoryById(found);
+        if (catObj && catObj.type && editType !== catObj.type) {
+          editType = catObj.type;
+          renderEditTypeButtons();
+        } else {
+          renderEditCategoryGrid();
+        }
+        updateEditCatChip();
+      }
     });
   }
 

@@ -4,7 +4,7 @@
     runtime: static
     branch: main
     plan: free
-    buildCommand: ''
+    buildCommand: ''>
     staticPublishPath: ./
     routes:
       - type: rewrite
