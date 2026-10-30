@@ -25,26 +25,121 @@ const DEFAULT_CATEGORIES = [
   { id: 'others', emoji: '⚡', name: 'Others', color: '#888888', type: 'expense' },
 ];
 
+// ─── OUTLINE SVG ICONS FOR CATEGORIES (MATCHING MINIMALIST OUTLINE STYLE) ───
+const CATEGORY_ICONS = {
+  food: `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"></path><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path><line x1="6" y1="1" x2="6" y2="4"></line><line x1="10" y1="1" x2="10" y2="4"></line><line x1="14" y1="1" x2="14" y2="4"></line></svg>`,
+  transport: `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>`,
+  shopping: `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>`,
+  entertainment: `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"></polygon><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>`,
+  bills: `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"></path><path d="M10 22h4"></path><path d="M12 2a7 7 0 0 0-7 7c0 2.38 1.19 4.47 3 5.74V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.26c1.81-1.27 3-3.36 3-5.74a7 7 0 0 0-7-7z"></path></svg>`,
+  health: `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>`,
+  education: `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>`,
+  rent: `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>`,
+  groceries: `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>`,
+  subscriptions: `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>`,
+  gifts: `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 12 20 22 4 22 4 12"></polyline><rect x="2" y="7" width="20" height="5"></rect><line x1="12" y1="22" x2="12" y2="7"></line><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"></path><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path></svg>`,
+  petrol: `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="11" height="17" rx="2"></rect><path d="M14 9h2a2 2 0 0 1 2 2v6a1 1 0 0 0 1 1h1"></path><circle cx="8.5" cy="10.5" r="2.5"></circle></svg>`,
+  salary: `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>`,
+  stocks: `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>`,
+  mutual_funds: `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>`,
+  crypto: `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.5 9.5c1-1 3.5-1 4.5 0s0 2.5-1 3c1 .5 2 1.5 1.5 3s-3.5 1-5 0"></path><line x1="12" y1="6" x2="12" y2="8"></line><line x1="12" y1="16" x2="12" y2="18"></line></svg>`,
+  gold: `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg>`,
+  fd_ppf: `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="2" y1="22" x2="22" y2="22"></line><line x1="2" y1="11" x2="22" y2="11"></line><path d="M12 2L2 7v4h20V7L12 2z"></path><line x1="6" y1="11" x2="6" y2="22"></line><line x1="10" y1="11" x2="10" y2="22"></line><line x1="14" y1="11" x2="14" y2="22"></line><line x1="18" y1="11" x2="18" y2="22"></line></svg>`,
+  real_estate: `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"></path><line x1="6" y1="18" x2="18" y2="18"></line></svg>`,
+  others: `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>`
+};
+
 // ─── DEFAULT KEYWORDS FOR SMART AUTO-DETECTION ───
 const DEFAULT_KEYWORDS = {
-  transport: ['uber', 'ola', 'rapido', 'auto', 'metro', 'bus', 'cab', 'train', 'flight', 'petrol', 'fuel', 'diesel', 'parking', 'toll', 'fare', 'bike', 'taxi', 'ride', 'rickshaw', 'irctc', 'fastag', 'indigo', 'air india'],
-  food: ['swiggy', 'zomato', 'lunch', 'dinner', 'breakfast', 'snacks', 'coffee', 'tea', 'cafe', 'restaurant', 'burger', 'pizza', 'biryani', 'food', 'meal', 'eat', 'kfc', 'mcdonalds', 'starbucks', 'dominos', 'chai', 'canteen', 'dhaba', 'bakery', 'subway', 'maggi', 'samosa', 'thali', 'mess'],
-  groceries: ['blinkit', 'zepto', 'instamart', 'bigbasket', 'grocery', 'groceries', 'vegetables', 'fruits', 'milk', 'supermarket', 'mart', 'ration', 'bread', 'eggs', 'dmart', 'kirana'],
-  shopping: ['amazon', 'flipkart', 'myntra', 'clothes', 'shoes', 'mall', 'ajio', 'zara', 'h&m', 'meesho', 'purchase', 'buy', 'dress', 'shirt', 'tshirt', 'jeans', 'nykaa'],
-  entertainment: ['movie', 'cinema', 'netflix', 'prime', 'hotstar', 'spotify', 'youtube', 'concert', 'party', 'pub', 'club', 'game', 'gaming', 'bookmyshow', 'theatre'],
-  bills: ['electricity', 'wifi', 'internet', 'water', 'gas', 'recharge', 'mobile', 'broadband', 'dth', 'bill', 'current bill', 'cylinder', 'eb bill', 'airtel', 'jio', 'vi', 'bescom'],
-  health: ['medicine', 'doctor', 'hospital', 'pharmacy', 'clinic', 'test', 'lab', 'dental', 'gym', 'fitness', '1mg', 'apollo', 'pharmeasy', 'meds', 'tablet', 'consultation'],
-  education: ['fees', 'course', 'book', 'tuition', 'udemy', 'college', 'school', 'exam', 'stationary', 'class', 'coursera', 'books'],
-  rent: ['rent', 'flat rent', 'house rent', 'maintenance', 'pg', 'room rent'],
-  subscriptions: ['subscription', 'subscriptions', 'sub', 'icloud', 'google one', 'apple', 'youtube premium', 'chatgpt', 'openai', 'patreon'],
-  gifts: ['gift', 'present', 'donation', 'charity', 'birthday', 'anniversary'],
-  salary: ['salary', 'stipend', 'bonus', 'freelance', 'client', 'dividend', 'interest', 'cashback', 'credit', 'received', 'incentive'],
-  stocks: ['stocks', 'shares', 'equity', 'zerodha', 'groww', 'angelone', 'upstox', 'nifty', 'sensex', 'demat', 'share market', 'trading'],
-  mutual_funds: ['mutual fund', 'mutual funds', 'mf', 'sip', 'index fund', 'etf', 'coin', 'uti', 'parag parikh', 'mirae', 'quant', 'hdfc mf'],
-  crypto: ['crypto', 'bitcoin', 'btc', 'eth', 'ethereum', 'solana', 'sol', 'binance', 'wazirx', 'coindcx', 'coinbase', 'doge'],
-  gold: ['gold', 'digital gold', 'silver', 'sgb', 'sovereign gold', 'tanishq', 'jewel', 'precious metal'],
-  fd_ppf: ['fd', 'fixed deposit', 'rd', 'ppf', 'epf', 'provident fund', 'nps', 'bonds', 'treasury', 'recurring deposit'],
-  real_estate: ['real estate', 'property', 'land', 'plot', 'flat purchase', 'apartment'],
+  food: [
+    'foo', 'food', 'fd', 'eat', 'eating', 'khana', 'swiggy', 'zomato', 'lunch', 'dinner',
+    'breakfast', 'snacks', 'coffee', 'tea', 'cafe', 'restaurant', 'burger', 'pizza',
+    'biryani', 'meal', 'kfc', 'mcdonalds', 'starbucks', 'dominos', 'chai', 'canteen',
+    'dhaba', 'bakery', 'subway', 'maggi', 'samosa', 'thali', 'mess', 'dessert',
+    'ice cream', 'roll', 'shawarma', 'paneer', 'chicken', 'momo', 'dosa', 'idli',
+    'juice', 'sandwich', 'pasta', 'paratha', 'nashta', 'sweets', 'mithai', 'beverage',
+    'shake', 'roti', 'naan', 'curry', 'boba', 'waffle', 'momos', 'biriyani', 'tiffin', 'chaat'
+  ],
+  transport: [
+    'uber', 'ola', 'rapido', 'auto', 'metro', 'bus', 'cab', 'train', 'flight', 'petrol',
+    'fuel', 'diesel', 'cng', 'petrol pump', 'parking', 'toll', 'fare', 'bike', 'taxi',
+    'ride', 'rickshaw', 'irctc', 'fastag', 'indigo', 'air india', 'gas station', 'shell',
+    'hp petrol', 'indian oil', 'chalo', 'ticket', 'commute', 'puncture', 'mechanic', 'car service'
+  ],
+  shopping: [
+    'amazon', 'flipkart', 'clothes', 'shirt', 'shoes', 'sneakers', 'bag', 'myntra', 'meesho',
+    'ajio', 'zara', 'h&m', 'shopping', 'order', 'dress', 'jeans', 'tshirt', 'kurta', 'saree',
+    'jacket', 'coat', 'trouser', 'pant', 'skirt', 'top', 'blouse', 'watch', 'sunglasses',
+    'cap', 'hat', 'belt', 'wallet', 'purse', 'backpack', 'suitcase', 'decathlon', 'uniqlo',
+    'levis', 'nike', 'adidas', 'puma', 'reebok', 'lifestyle store', 'brand', 'purchase',
+    'bought', 'thrift', 'secondhand', 'online shopping', 'mall', 'nykaa', 'lenskart',
+    'snitch', 'bluestone', 'tanishq', 'cosmetics', 'makeup', 'perfume', 'attire', 'heels', 'sandals'
+  ],
+  groceries: [
+    'blinkit', 'zepto', 'instamart', 'bigbasket', 'grocery', 'groceries', 'vegetables', 'fruits',
+    'milk', 'supermarket', 'mart', 'ration', 'bread', 'eggs', 'dmart', 'kirana', 'bbnow',
+    'jiomart', 'sabzi', 'mandi', 'atta', 'oil', 'dal', 'rice', 'sugar', 'spices', 'doodh',
+    'dudh', 'paneer', 'curd', 'dahi', 'butter', 'cheese', 'ghee', 'vegetable', 'fruit'
+  ],
+  bills: [
+    'electricity', 'wifi', 'internet', 'water', 'gas', 'recharge', 'mobile', 'broadband',
+    'dth', 'bill', 'current bill', 'cylinder', 'eb bill', 'airtel', 'jio', 'vi', 'bescom',
+    'tneb', 'mseb', 'water bill', 'piped gas', 'electric bill', 'power bill', 'tata play',
+    'maintenance', 'society', 'cleaning', 'maid', 'cook', 'plumber', 'electrician', 'urban company'
+  ],
+  rent: [
+    'rent', 'flat rent', 'house rent', 'maintenance', 'pg', 'room rent', 'pg rent',
+    'hostel', 'landlord', 'brokerage', 'deposit', 'advance', 'society maintenance'
+  ],
+  entertainment: [
+    'movie', 'cinema', 'netflix', 'prime', 'hotstar', 'spotify', 'youtube', 'concert',
+    'party', 'pub', 'club', 'game', 'gaming', 'bookmyshow', 'theatre', 'pvr', 'inox',
+    'cinepolis', 'disney', 'steam', 'playstation', 'xbox', 'show', 'outing', 'drinks', 'beer'
+  ],
+  health: [
+    'medicine', 'doctor', 'hospital', 'pharmacy', 'clinic', 'test', 'lab', 'dental', 'gym',
+    'fitness', '1mg', 'apollo', 'pharmeasy', 'meds', 'tablet', 'consultation', 'blood test',
+    'scan', 'xray', 'dentist', 'eye check', 'therapy', 'protein', 'supplements', 'vitamins'
+  ],
+  education: [
+    'fees', 'course', 'book', 'tuition', 'udemy', 'college', 'school', 'exam', 'stationary',
+    'class', 'coursera', 'books', 'stationery', 'classes', 'coaching', 'training', 'cert',
+    'pen', 'notebook', 'library'
+  ],
+  subscriptions: [
+    'subscription', 'subscriptions', 'sub', 'icloud', 'google one', 'apple', 'youtube premium',
+    'chatgpt', 'openai', 'patreon', 'membership', 'apple music', 'truecaller', 'hotstar sub'
+  ],
+  gifts: [
+    'gift', 'present', 'donation', 'charity', 'birthday', 'anniversary', 'shagun',
+    'wedding', 'rakhi', 'diwali gift', 'festive', 'flowers', 'bouquet'
+  ],
+  salary: [
+    'salary', 'stipend', 'bonus', 'freelance', 'client', 'dividend', 'interest', 'cashback',
+    'credit', 'received', 'incentive', 'consulting', 'income', 'refund', 'earnings', 'profit'
+  ],
+  stocks: [
+    'stocks', 'shares', 'equity', 'zerodha', 'groww', 'angelone', 'upstox', 'nifty',
+    'sensex', 'demat', 'share market', 'trading', 'kite'
+  ],
+  mutual_funds: [
+    'mutual fund', 'mutual funds', 'mf', 'sip', 'index fund', 'etf', 'coin', 'uti',
+    'parag parikh', 'mirae', 'quant', 'hdfc mf', 'nav'
+  ],
+  crypto: [
+    'crypto', 'bitcoin', 'btc', 'eth', 'ethereum', 'solana', 'sol', 'binance', 'wazirx',
+    'coindcx', 'coinbase', 'doge', 'usdt'
+  ],
+  gold: [
+    'gold', 'digital gold', 'silver', 'sgb', 'sovereign gold', 'tanishq', 'jewel', 'precious metal'
+  ],
+  fd_ppf: [
+    'fd', 'fixed deposit', 'rd', 'ppf', 'epf', 'provident fund', 'nps', 'bonds', 'treasury',
+    'recurring deposit', 'post office'
+  ],
+  real_estate: [
+    'real estate', 'property', 'land', 'plot', 'flat purchase', 'apartment'
+  ],
   others: ['other', 'misc']
 };
 
@@ -108,10 +203,12 @@ function getTransactionIcon(t, cat) {
   const note = (t.note || '').toLowerCase();
   for (const [brand, domain] of Object.entries(BRAND_DOMAINS)) {
     if (note.includes(brand)) {
-      return `<img src="https://www.google.com/s2/favicons?domain=${domain}&sz=64" alt="${brand}" class="txn-favicon" onerror="this.outerHTML='<span>${cat.emoji}</span>'">`;
+      const fallbackSvg = `<span class="txn-svg-icon">${CATEGORY_ICONS[t.category] || (cat && CATEGORY_ICONS[cat.id]) || CATEGORY_ICONS.others}</span>`;
+      return `<img src="https://www.google.com/s2/favicons?domain=${domain}&sz=64" alt="${brand}" class="txn-favicon" onerror="this.outerHTML='${fallbackSvg.replace(/'/g, "\\'")}'">`;
     }
   }
-  return `<span>${cat.emoji}</span>`;
+  const svg = CATEGORY_ICONS[t.category] || (cat && CATEGORY_ICONS[cat.id]) || CATEGORY_ICONS.others;
+  return `<span class="txn-svg-icon">${svg}</span>`;
 }
 
 // ─── STATE ───
@@ -155,7 +252,15 @@ function loadData() {
         state.settings.keywords = JSON.parse(JSON.stringify(DEFAULT_KEYWORDS));
       } else {
         for (const [k, v] of Object.entries(DEFAULT_KEYWORDS)) {
-          if (!state.settings.keywords[k]) state.settings.keywords[k] = [...v];
+          if (!state.settings.keywords[k]) {
+            state.settings.keywords[k] = [...v];
+          } else {
+            v.forEach(word => {
+              if (!state.settings.keywords[k].includes(word)) {
+                state.settings.keywords[k].push(word);
+              }
+            });
+          }
         }
       }
       if (state.settings.categories) {
@@ -931,25 +1036,30 @@ function parseSmartText(rawText) {
 
   const now = new Date();
 
-  // 1. Check Date (yesterday, today, tomorrow, N days ago)
-  if (/\bday before yesterday\b/i.test(text)) {
+  // 1. Check Date (yesterday, typos of yesterday, today, tomorrow, N days ago)
+  const dayBeforeYesterdayRegex = /\b(?:day\s+before\s+yesterday|day\s+before\s+yday|2\s*days?\s*ago)\b/i;
+  const yesterdayRegex = /\b(?:yesterday|eyasterrday|eyasterday|yestarday|yesteday|yesturday|yesterdy|yday|yest|prev\s*day|previous\s*day)\b/i;
+  const todayRegex = /\b(?:today|tod|aaj)\b/i;
+  const tomorrowRegex = /\b(?:tomorrow|tmrw|kal)\b/i;
+
+  if (dayBeforeYesterdayRegex.test(text)) {
     const d = new Date(now);
     d.setDate(d.getDate() - 2);
     result.date = d;
-    text = text.replace(/\bday before yesterday\b/i, ' ');
-  } else if (/\byesterday\b/i.test(text)) {
+    text = text.replace(dayBeforeYesterdayRegex, ' ');
+  } else if (yesterdayRegex.test(text)) {
     const d = new Date(now);
     d.setDate(d.getDate() - 1);
     result.date = d;
-    text = text.replace(/\byesterday\b/i, ' ');
-  } else if (/\btoday\b/i.test(text)) {
+    text = text.replace(yesterdayRegex, ' ');
+  } else if (todayRegex.test(text)) {
     result.date = new Date(now);
-    text = text.replace(/\btoday\b/i, ' ');
-  } else if (/\btomorrow\b/i.test(text)) {
+    text = text.replace(todayRegex, ' ');
+  } else if (tomorrowRegex.test(text)) {
     const d = new Date(now);
     d.setDate(d.getDate() + 1);
     result.date = d;
-    text = text.replace(/\btomorrow\b/i, ' ');
+    text = text.replace(tomorrowRegex, ' ');
   } else {
     const daysAgoMatch = text.match(/\b(\d+)\s*(?:days?|d)\s*ago\b/i);
     if (daysAgoMatch) {
@@ -962,9 +1072,9 @@ function parseSmartText(rawText) {
   }
 
   // 2. Check Payment Method (CASH & UPI ONLY)
-  if (/\b(?:cash|nakad)\b/i.test(text)) {
+  if (/\b(?:cash|nakad|roked)\b/i.test(text)) {
     result.method = 'Cash';
-    text = text.replace(/\b(?:cash|nakad)\b/i, ' ');
+    text = text.replace(/\b(?:cash|nakad|roked)\b/i, ' ');
   } else if (/\b(?:upi|online|gpay|phonepe|paytm|scan|qr|netbanking|card|bank)\b/i.test(text)) {
     result.method = 'UPI';
     text = text.replace(/\b(?:upi|online|gpay|phonepe|paytm|scan|qr|netbanking|card|bank)\b/i, ' ');
@@ -1000,10 +1110,10 @@ function parseSmartText(rawText) {
   const keywords = (state.settings && state.settings.keywords) || DEFAULT_KEYWORDS;
   let detectedCat = null;
 
-  // First check exact keyword matches in word list
+  // First check exact keyword matches in word list or prefix match (e.g. "foo" -> "food")
   for (const word of lowerWords) {
     for (const [catId, words] of Object.entries(keywords)) {
-      if (words.some(kw => kw.toLowerCase() === word)) {
+      if (words.some(kw => kw.toLowerCase() === word || (word.length >= 3 && kw.toLowerCase().startsWith(word)))) {
         detectedCat = catId;
         break;
       }
@@ -1021,10 +1131,10 @@ function parseSmartText(rawText) {
     }
   }
 
-  // Also match category names directly
+  // Also match category names directly or prefix
   if (!detectedCat) {
     for (const cat of (state.settings.categories || DEFAULT_CATEGORIES)) {
-      if (lowerWords.includes(cat.id.toLowerCase()) || lowerWords.includes(cat.name.toLowerCase())) {
+      if (lowerWords.includes(cat.id.toLowerCase()) || lowerWords.includes(cat.name.toLowerCase()) || (lowerWords.some(w => w.length >= 3 && cat.id.toLowerCase().startsWith(w)))) {
         detectedCat = cat.id;
         break;
       }
@@ -1038,7 +1148,19 @@ function parseSmartText(rawText) {
       result.type = catObj.type;
     }
   }
-  result.note = cleaned || (detectedCat ? (getCategoryById(detectedCat).name) : '');
+
+  // Format clean note: if single word matching category (like "foo" or "food"), format as clean category name "Food"
+  if (cleaned) {
+    if (detectedCat && (cleaned.toLowerCase() === 'foo' || cleaned.toLowerCase() === detectedCat.toLowerCase() || cleaned.toLowerCase() === getCategoryById(detectedCat).name.toLowerCase())) {
+      result.note = getCategoryById(detectedCat).name;
+    } else {
+      result.note = cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
+    }
+  } else if (detectedCat) {
+    result.note = getCategoryById(detectedCat).name;
+  } else {
+    result.note = 'Expense';
+  }
 
   return result;
 }
@@ -1109,6 +1231,7 @@ function renderModalTypeButtons() {
 
 function renderCategoryGrid() {
   const grid = document.getElementById('category-grid');
+  if (!grid) return;
   const cats = state.settings.categories.filter(c => {
     if (currentType === 'income') return c.type === 'income' || c.id === 'others';
     if (currentType === 'investment') return c.type === 'investment' || c.id === 'others';
