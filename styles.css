@@ -392,7 +392,7 @@ a { text-decoration: none; color: inherit; }
   flex: 0 0 22px;
 }
 
-.txn-brand-icon .txn-svg-icon { display: inline-flex; }
+.txn-brand-icon .txn-svg-icon:not([hidden]) { display: inline-flex; }
 
 .txn-svg-icon {
   display: inline-flex;
