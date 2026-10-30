@@ -202,9 +202,9 @@ const BRAND_DOMAINS = {
 function getTransactionIcon(t, cat) {
   const note = (t.note || '').toLowerCase();
   for (const [brand, domain] of Object.entries(BRAND_DOMAINS)) {
-    if (note.includes(brand)) {
-      const fallbackSvg = `<span class="txn-svg-icon">${CATEGORY_ICONS[t.category] || (cat && CATEGORY_ICONS[cat.id]) || CATEGORY_ICONS.others}</span>`;
-      return `<img src="https://www.google.com/s2/favicons?domain=${domain}&sz=64" alt="${brand}" class="txn-favicon" onerror="this.outerHTML='${fallbackSvg.replace(/'/g, "\\'")}'">`;
+    if (new RegExp(`\\b${brand.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i').test(note)) {
+      const fallbackSvg = CATEGORY_ICONS[t.category] || (cat && CATEGORY_ICONS[cat.id]) || CATEGORY_ICONS.others;
+      return `<span class="txn-brand-icon"><img src="https://www.google.com/s2/favicons?domain=${domain}&sz=64" alt="" aria-hidden="true" class="txn-favicon" onerror="this.hidden=true;this.nextElementSibling.hidden=false"><span class="txn-svg-icon" hidden>${fallbackSvg}</span></span>`;
     }
   }
   const svg = CATEGORY_ICONS[t.category] || (cat && CATEGORY_ICONS[cat.id]) || CATEGORY_ICONS.others;
@@ -1241,6 +1241,7 @@ function closeAddModal() {
 
 function renderModalTypeButtons() {
   document.querySelectorAll('#add-modal .type-btn').forEach(btn => {
+    setTypeButtonContent(btn);
     btn.classList.toggle('active', btn.dataset.type === currentType);
   });
   renderCategoryGrid();
@@ -1472,9 +1473,20 @@ function updateEditCatChip() {
 
 function renderEditTypeButtons() {
   document.querySelectorAll('#edit-type-selector .type-btn').forEach(btn => {
+    setTypeButtonContent(btn);
     btn.classList.toggle('active', btn.dataset.type === editType);
   });
   renderEditCategoryGrid();
+}
+
+function setTypeButtonContent(button) {
+  const details = {
+    expense: ['shopping', 'Expense'],
+    income: ['salary', 'Income'],
+    investment: ['stocks', 'Investment'],
+  }[button.dataset.type];
+  if (!details) return;
+  button.innerHTML = `${categoryIcon(details[0])}<span>${details[1]}</span>`;
 }
 
 function renderEditCategoryGrid() {

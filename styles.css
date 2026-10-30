@@ -381,6 +381,17 @@ a { text-decoration: none; color: inherit; }
   display: block;
 }
 
+.txn-brand-icon {
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 22px;
+}
+
+.txn-brand-icon .txn-svg-icon { display: inline-flex; }
+
 .txn-svg-icon {
   display: inline-flex;
   align-items: center;
@@ -645,7 +656,14 @@ a { text-decoration: none; color: inherit; }
   border: 1px solid var(--border);
   background: var(--bg-card);
   transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
 }
+
+.type-btn .category-svg-icon { width: 18px; height: 18px; flex-basis: 18px; }
+.type-btn .category-svg-icon svg { width: 18px; height: 18px; }
 
 .type-btn:hover { background: var(--bg-card-hover); }
 
