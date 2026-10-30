@@ -909,6 +909,12 @@ function openAddModal(presetType = 'expense', presetCategory = null) {
   renderCategoryGrid();
   renderMethodButtons();
 
+  // Always start with category grid hidden, chip visible
+  const catGrid = document.getElementById('category-grid');
+  if (catGrid) catGrid.style.display = 'none';
+  const toggleBtn = document.getElementById('toggle-cat-grid-btn');
+  if (toggleBtn) toggleBtn.classList.remove('open');
+
   setTimeout(() => {
     if (smartInput) smartInput.focus();
   }, 100);
@@ -942,6 +948,11 @@ function renderCategoryGrid() {
       selectedCategory = btn.dataset.id;
       grid.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
+      updateCatChip();
+      // Auto-collapse grid after selection
+      grid.style.display = 'none';
+      const toggleBtn = document.getElementById('toggle-cat-grid-btn');
+      if (toggleBtn) toggleBtn.classList.remove('open');
     });
   });
 
@@ -951,6 +962,15 @@ function renderCategoryGrid() {
     const first = grid.querySelector('.cat-btn');
     if (first) first.classList.add('active');
   }
+
+  updateCatChip();
+}
+
+function updateCatChip() {
+  const chip = document.getElementById('cat-selected-chip');
+  if (!chip) return;
+  const cat = getCategoryById(selectedCategory);
+  chip.textContent = cat ? `${cat.emoji} ${cat.name}` : '— pick a category';
 }
 
 function renderMethodButtons() {
@@ -1004,6 +1024,7 @@ function handleSmartTextInput() {
       catPill.textContent = `${catObj.emoji} ${catObj.name}`;
       catPill.style.display = 'inline-flex';
     }
+    updateCatChip();
   } else {
     if (catPill) catPill.style.display = 'none';
   }
@@ -1479,6 +1500,17 @@ function initEventListeners() {
   document.getElementById('modal-save').addEventListener('click', saveTransaction);
   const modalCloseIcon = document.getElementById('modal-close-icon');
   if (modalCloseIcon) modalCloseIcon.addEventListener('click', closeAddModal);
+
+  // Category toggle button (show/hide full grid)
+  const toggleCatBtn = document.getElementById('toggle-cat-grid-btn');
+  if (toggleCatBtn) {
+    toggleCatBtn.addEventListener('click', () => {
+      const grid = document.getElementById('category-grid');
+      const isOpen = grid.style.display !== 'none';
+      grid.style.display = isOpen ? 'none' : 'flex';
+      toggleCatBtn.classList.toggle('open', !isOpen);
+    });
+  }
 
   // Edit modal
   document.querySelectorAll('#edit-type-selector .type-btn').forEach(btn => {

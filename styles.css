@@ -1827,3 +1827,50 @@ body.light-theme .keyword-tag {
   background: rgba(0, 0, 0, 0.08);
   color: #111827;
 }
+
+/* -- COMPACT CATEGORY CHIP ROW (Add Modal) -- */
+.cat-chip-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.cat-selected-chip {
+  flex: 1;
+  padding: 8px 14px;
+  background: var(--accent-dim);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-pill);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--accent);
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+}
+.cat-toggle-btn {
+  padding: 6px 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.cat-toggle-btn:hover {
+  background: var(--bg-card-hover);
+  color: var(--text);
+  border-color: var(--border-strong);
+}
+.cat-toggle-btn.open {
+  color: var(--accent);
+  border-color: var(--accent);
+}
