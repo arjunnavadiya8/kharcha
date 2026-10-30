@@ -167,7 +167,7 @@ function loadData() {
           }
         });
       }
-      if (data.transactions) state.transactions = data.transactions;
+      if (data.transactions) state.transactions = sortTransactionsLatestFirst(data.transactions);
     } else {
       state.settings.keywords = JSON.parse(JSON.stringify(DEFAULT_KEYWORDS));
     }
@@ -260,6 +260,27 @@ function sumByType(txns, type) {
   return txns.filter(t => t.type === type).reduce((s, t) => s + t.amount, 0);
 }
 
+function sortTransactionsLatestFirst(txns) {
+  return [...txns].sort((a, b) => {
+    const timeA = new Date(a.date).getTime() || 0;
+    const timeB = new Date(b.date).getTime() || 0;
+    if (timeB !== timeA) {
+      return timeB - timeA;
+    }
+    // Tie-breaker 1: explicit createdAt timestamp or timestamp encoded in id
+    const createdA = a.createdAt || (a.id ? parseInt(a.id.slice(0, 8), 36) : 0) || 0;
+    const createdB = b.createdAt || (b.id ? parseInt(b.id.slice(0, 8), 36) : 0) || 0;
+    if (createdB !== createdA) {
+      return createdB - createdA;
+    }
+    // Tie-breaker 2: id comparison
+    if (a.id && b.id) {
+      return b.id.localeCompare(a.id);
+    }
+    return 0;
+  });
+}
+
 // ─── TOAST ───
 function showToast(msg) {
   const toast = document.getElementById('toast');
@@ -347,7 +368,7 @@ function renderHome() {
   remEl.className = 'budget-remaining' + (remaining < 0 ? ' over' : '');
 
   // Recent transactions (latest 5)
-  const sorted = [...txns].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 5);
+  const sorted = sortTransactionsLatestFirst(txns).slice(0, 5);
   const container = document.getElementById('recent-transactions');
 
   if (sorted.length === 0) {
@@ -733,7 +754,7 @@ function renderHistory() {
   // Update filter pills — add category pills dynamically
   renderFilterPills(txns);
 
-  const sorted = [...filtered].sort((a, b) => new Date(b.date) - new Date(a.date));
+  const sorted = sortTransactionsLatestFirst(filtered);
   const container = document.getElementById('history-transactions');
 
   if (sorted.length === 0) {
@@ -1230,7 +1251,22 @@ function saveTransaction() {
   if (!amount || amount <= 0) { showToast('Enter a valid amount'); return; }
 
   const note = document.getElementById('txn-note').value.trim();
-  const datetime = document.getElementById('txn-datetime').value;
+  const datetimeVal = document.getElementById('txn-datetime').value;
+
+  const now = new Date();
+  let txnDate;
+  if (datetimeVal) {
+    const chosen = new Date(datetimeVal);
+    // If chosen time is within 2 minutes of now, use current exact timestamp
+    if (Math.abs(chosen.getTime() - now.getTime()) < 120000) {
+      txnDate = now.toISOString();
+    } else {
+      chosen.setSeconds(now.getSeconds(), now.getMilliseconds());
+      txnDate = chosen.toISOString();
+    }
+  } else {
+    txnDate = now.toISOString();
+  }
 
   const txn = {
     id: generateId(),
@@ -1239,10 +1275,11 @@ function saveTransaction() {
     category: selectedCategory,
     method: selectedMethod, // Cash or UPI only
     note,
-    date: datetime ? new Date(datetime).toISOString() : new Date().toISOString(),
+    date: txnDate,
+    createdAt: Date.now(),
   };
 
-  state.transactions.push(txn);
+  state.transactions.unshift(txn);
   saveData();
   closeAddModal();
   showToast('Transaction added!');
